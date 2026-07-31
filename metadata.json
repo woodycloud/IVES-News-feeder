@@ -1,0 +1,6 @@
+{
+  "name": "IVES News",
+  "description": "A sleek, distraction-free personal English news aggregator PWA designed for fast offline reading and AI summaries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

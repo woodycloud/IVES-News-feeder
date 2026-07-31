@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800&family=SF+Pro+Text:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "New York", "Lora", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Apple System Colors */
+  --color-ios-blue: #007AFF;
+  --color-ios-green: #34C759;
+  --color-ios-orange: #FF9F0A;
+  --color-ios-red: #FF3B30;
+  --color-ios-purple: #AF52DE;
+  --color-ios-[#007AFF]: #007AFF;
+}
+
+@layer utilities {
+  /* iOS Safe Area Padding */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  /* Glassmorphism / Frosted Blur Effects */
+  .ios-glass {
+    background-color: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .dark .ios-glass {
+    background-color: rgba(28, 28, 30, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .ios-glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .ios-glass-card {
+    background: rgba(44, 44, 46, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Reader Sepia Theme */
+  .reader-sepia {
+    background-color: #F8F1E5 !important;
+    color: #433422 !important;
+  }
+  .reader-sepia * {
+    color: #433422 !important;
+  }
+}
+
+/* Hide scrollbars for native iOS touch feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Thin iOS custom scrollbars for desktop */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(142, 142, 147, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 142, 147, 0.5);
+}
+
+/* Smooth spring physics animations */
+@keyframes iosPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+
+.animate-ios-pulse {
+  animation: iosPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Skeleton Shimmer Loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, rgba(229, 229, 234, 0.5) 25%, rgba(242, 242, 247, 0.8) 50%, rgba(229, 229, 234, 0.5) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, rgba(44, 44, 46, 0.5) 25%, rgba(58, 58, 60, 0.8) 50%, rgba(44, 44, 46, 0.5) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
