@@ -1,24 +1,33 @@
 {
+  "id": "ives-news-pwa",
   "name": "IVES News",
   "short_name": "IVES News",
-  "description": "Minimalist English News Aggregator PWA with Smart AI Summaries",
+  "description": "Minimalist English News Aggregator PWA with IVES Reader Mode",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#000000",
-  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#007AFF",
+  "orientation": "any",
+  "categories": ["news", "utilities"],
   "icons": [
     {
-      "src": "/Ives.png",
+      "src": "/logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/Ives.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }

@@ -63,9 +63,9 @@ export default function ArticleList({
   };
 
   return (
-    <div id="article-list-panel" className="w-full md:w-80 lg:w-96 border-r border-black/5 dark:border-white/10 h-full flex flex-col bg-[#F2F2F7] dark:bg-[#000000] shrink-0 select-none">
+    <section id="article-list-panel" aria-label="Articles Feed" className="w-full md:w-80 lg:w-96 border-r border-black/5 dark:border-white/10 h-full flex flex-col bg-[#F2F2F7] dark:bg-[#000000] shrink-0 select-none">
       {/* iOS Large Header & Action Bar */}
-      <div className="p-4 md:p-5 pb-3 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 flex flex-col gap-3 shrink-0 sticky top-0 z-10">
+      <header className="p-4 md:p-5 pb-3 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 flex flex-col gap-3 shrink-0 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold tracking-widest text-[#007AFF] uppercase block">
@@ -81,6 +81,7 @@ export default function ArticleList({
             id="refresh-feed-btn"
             onClick={onRefresh}
             disabled={loading}
+            aria-label="Refresh feed"
             className={`w-9 h-9 rounded-full bg-stone-100 dark:bg-[#2C2C2E] flex items-center justify-center text-[#007AFF] dark:text-[#0A84FF] transition-all cursor-pointer shadow-xs ${
               loading ? "animate-spin" : ""
             }`}
@@ -91,8 +92,10 @@ export default function ArticleList({
         </div>
 
         {/* iOS Segmented Control */}
-        <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-xl flex items-center gap-1 text-xs font-semibold relative">
+        <div role="tablist" aria-label="Article Filter Options" className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-xl flex items-center gap-1 text-xs font-semibold relative">
           <button
+            role="tab"
+            aria-selected={!filterUnread}
             onClick={() => setFilterUnread(false)}
             className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
               !filterUnread
@@ -103,6 +106,8 @@ export default function ArticleList({
             All Stories
           </button>
           <button
+            role="tab"
+            aria-selected={filterUnread}
             onClick={() => setFilterUnread(true)}
             className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
               filterUnread
@@ -120,6 +125,7 @@ export default function ArticleList({
           <input
             id="article-search-input"
             type="text"
+            aria-label="Search stories"
             placeholder="Search stories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -128,13 +134,14 @@ export default function ArticleList({
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
+              aria-label="Clear search query"
               className="p-1 rounded-full bg-stone-300 dark:bg-stone-600 text-stone-600 dark:text-stone-200 cursor-pointer shrink-0"
             >
               <X size={12} />
             </button>
           )}
         </div>
-      </div>
+      </header>
 
       {/* Article Cards Stream */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
@@ -246,7 +253,7 @@ export default function ArticleList({
           })
         )}
       </div>
-    </div>
+    </section>
   );
 }
 

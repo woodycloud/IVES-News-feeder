@@ -151,9 +151,9 @@ export default function ArticleReader({
         <div className="w-16 h-16 rounded-3xl bg-white dark:bg-[#1C1C1E] shadow-sm border border-black/5 dark:border-white/10 flex items-center justify-center mb-4 text-[#007AFF]">
           <BookOpen size={28} />
         </div>
-        <h3 className="text-stone-900 dark:text-white font-sans font-bold text-lg mb-1">Apple Reader Mode</h3>
+        <h3 className="text-stone-900 dark:text-white font-sans font-bold text-lg mb-1">IVES Reader Mode</h3>
         <p className="text-xs text-stone-400 dark:text-stone-500 font-sans max-w-xs leading-relaxed">
-          Select any story from your feeds to read in distraction-free iOS layout.
+          Select any story from your feeds to read in distraction-free layout.
         </p>
       </div>
     );
@@ -296,6 +296,7 @@ export default function ArticleReader({
             whileTap={{ scale: 0.9 }}
             id="reader-bookmark-btn"
             onClick={() => onToggleBookmark(article)}
+            aria-label={isBookmarked ? "Remove Bookmark" : "Save Bookmark"}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xs ${
               isBookmarked ? "bg-[#FF9F0A]/20 text-[#FF9F0A]" : "bg-stone-100 dark:bg-[#2C2C2E] text-stone-500 dark:text-stone-300"
             }`}
@@ -314,6 +315,7 @@ export default function ArticleReader({
                 onSaveOffline(article, fullText || article.description);
               }
             }}
+            aria-label={isOfflineSaved ? "Cached Offline" : "Cache for offline reading"}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xs ${
               isOfflineSaved ? "bg-[#34C759]/20 text-[#34C759]" : "bg-stone-100 dark:bg-[#2C2C2E] text-stone-500 dark:text-stone-300"
             }`}
@@ -326,6 +328,7 @@ export default function ArticleReader({
             whileTap={{ scale: 0.9 }}
             id="reader-copy-btn"
             onClick={handleCopyText}
+            aria-label="Copy article text"
             className="w-9 h-9 rounded-full bg-stone-100 dark:bg-[#2C2C2E] flex items-center justify-center text-stone-500 dark:text-stone-300 transition-all cursor-pointer shadow-xs"
             title="Copy article text"
           >

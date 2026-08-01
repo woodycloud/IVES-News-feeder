@@ -7,6 +7,7 @@ import React from "react";
 import { Feed } from "../types";
 import { Newspaper, Bookmark, Download, Settings, Plus, Rss, ChevronRight, Globe, Cpu, Atom, Sparkles, SlidersHorizontal, Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
+import ivesLogo from "../assets/logo.png";
 
 interface FeedListProps {
   feeds: Feed[];
@@ -47,9 +48,13 @@ export default function FeedList({
       <div className="flex items-center justify-between mb-6 pt-2 px-1">
         <div className="flex items-center gap-3">
           <img
-            src="/Ives.png"
+            src={ivesLogo}
             alt="IVES News Logo"
             className="w-10 h-10 rounded-xl object-cover shadow-sm border border-black/10 dark:border-white/10"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "./Ives.png";
+            }}
           />
           <div>
             <h1 className="font-sans font-bold text-lg tracking-tight text-stone-900 dark:text-white leading-none">IVES News</h1>
@@ -197,9 +202,9 @@ export default function FeedList({
                   <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-1.5 shadow-xs border border-black/5 dark:border-white/5 space-y-0.5">
                     {feeds
                       .filter((f) => f.enabled && f.category === cat)
-                      .map((feed) => (
+                      .map((feed, idx) => (
                         <motion.button
-                          key={feed.id}
+                          key={`${feed.id}-${idx}`}
                           whileTap={{ scale: 0.98 }}
                           id={`channel-feed-${feed.id}`}
                           onClick={() => onSelectFeed(feed.id)}

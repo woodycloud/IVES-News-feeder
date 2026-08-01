@@ -111,6 +111,7 @@ export default function FeedManager({
               whileTap={{ scale: 0.9 }}
               id="close-manager-btn"
               onClick={onClose}
+              aria-label="Close channels manager"
               className="w-8 h-8 rounded-full bg-stone-200 dark:bg-[#3A3A3C] flex items-center justify-center text-stone-500 dark:text-stone-300 cursor-pointer"
             >
               <X size={16} />
@@ -211,9 +212,9 @@ export default function FeedManager({
               </div>
 
               <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-1">
-                {feeds.map((feed) => (
+                {feeds.map((feed, idx) => (
                   <div
-                    key={feed.id}
+                    key={`${feed.id}-${idx}`}
                     className="flex items-center justify-between p-3 bg-white dark:bg-[#2C2C2E] rounded-2xl border border-black/5 dark:border-white/5 shadow-xs gap-3"
                   >
                     <div className="min-w-0 flex-1">

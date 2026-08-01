@@ -58,24 +58,81 @@ function decodeHtmlEntities(str: string): string {
   return decoded;
 }
 
+// Helper to fetch XML content with retry & fallback strategy
+async function fetchXmlContent(feedUrl: string): Promise<string> {
+  const getDomain = (urlStr: string) => {
+    try {
+      const u = new URL(urlStr);
+      let hostname = u.hostname.replace(/^www\./, "");
+      if (hostname.includes("npr.org")) return "npr.org";
+      if (hostname.includes("a.dj.com") || hostname.includes("wsj.com") || hostname.includes("dowjones.com")) return "wsj.com";
+      if (hostname.includes("scientificamerican.com")) return "scientificamerican.com";
+      return hostname;
+    } catch {
+      return "";
+    }
+  };
+
+  const domain = getDomain(feedUrl);
+  const candidates: string[] = [];
+
+  if (feedUrl.includes("feeds.npr.org")) {
+    candidates.push("https://npr.org/rss/rss.php?id=1001", feedUrl);
+  } else if (feedUrl.includes("scientificamerican.com")) {
+    candidates.push("https://www.scientificamerican.com/section/news/rss/", "https://www.scientificamerican.com/rss/", feedUrl);
+  } else if (feedUrl.includes("feeds.a.dj.com") || feedUrl.includes("wsj.com")) {
+    candidates.push("https://feeds.content.dowjones.io/public/rss/mw_topstories", feedUrl);
+  } else {
+    candidates.push(feedUrl);
+  }
+
+  if (domain && !feedUrl.includes("news.google.com")) {
+    candidates.push(`https://news.google.com/rss/search?q=site:${domain}&hl=en-US&gl=US&ceid=US:en`);
+  }
+
+  const userAgents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Feedly/1.0 (+http://www.feedly.com/fetcher.html)",
+    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+  ];
+
+  let lastError: any = null;
+
+  for (const url of candidates) {
+    for (const ua of userAgents) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "User-Agent": ua,
+            "Accept": "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          },
+          signal: AbortSignal.timeout(8000)
+        });
+
+        if (response.ok) {
+          const text = await response.text();
+          if (text && (text.includes("<rss") || text.includes("<feed") || text.includes("<xml") || text.includes("<channel"))) {
+            return text;
+          }
+        } else {
+          lastError = new Error(`HTTP status ${response.status}`);
+        }
+      } catch (err) {
+        lastError = err;
+      }
+    }
+  }
+
+  throw lastError || new Error(`Failed to fetch feed ${feedUrl}`);
+}
+
 // Helper to fetch and parse an RSS feed
 async function fetchAndParseFeed(feedUrl: string) {
   try {
-    const response = await fetch(feedUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "no-cache"
-      },
-      signal: AbortSignal.timeout(10000) // 10s timeout
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP status ${response.status}`);
-    }
-
-    const xmlText = await response.text();
+    const xmlText = await fetchXmlContent(feedUrl);
     
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -113,6 +170,12 @@ async function fetchAndParseFeed(feedUrl: string) {
     }
 
     feedTitle = decodeHtmlEntities(feedTitle.trim());
+    if (feedTitle.includes("- Google News") || feedTitle.startsWith("site:")) {
+      if (feedUrl.includes("npr.org")) feedTitle = "NPR News";
+      else if (feedUrl.includes("wsj") || feedUrl.includes("dj.com")) feedTitle = "Wall Street Journal";
+      else if (feedUrl.includes("scientificamerican")) feedTitle = "Scientific American";
+      else feedTitle = feedTitle.replace(/\s*-\s*Google News/i, "").replace(/^site:/i, "").trim();
+    }
 
     const seenItemIds = new Set<string>();
 

@@ -3,35 +3,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const CACHE_NAME = "ives-news-v1";
-const STATIC_ASSETS = [
+const CACHE_NAME = "ives-news-v2";
+const ESSENTIAL_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/src/main.tsx",
-  "/src/App.tsx",
-  "/src/index.css"
+  "/logo.png",
+  "/Ives.png"
 ];
 
-// Install Event
+// Install Event - cache app shell safely
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("[Service Worker] Caching app shell");
-      return cache.addAll(STATIC_ASSETS);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log("[Service Worker] Caching core app shell");
+      for (const asset of ESSENTIAL_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn("[Service Worker] Could not pre-cache asset:", asset, err);
+        }
+      }
     })
   );
   self.skipWaiting();
 });
 
-// Activate Event
+// Activate Event - clean up stale caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log("[Service Worker] Removing old cache", key);
+            console.log("[Service Worker] Removing old cache:", key);
             return caches.delete(key);
           }
         })
@@ -41,16 +46,17 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch Event: Cache-First for static assets, Network-First with fallback for API requests
+// Fetch Event
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
   const requestUrl = new URL(event.request.url);
 
-  // For API endpoints, we do a Network-First strategy
+  // Network-First for API calls (/api/*)
   if (requestUrl.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If successful, clone and put in a special api cache
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -60,47 +66,33 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-          // Offline fallback from cache
           console.log("[Service Worker] API offline fallback for:", requestUrl.pathname);
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
-            // If completely unavailable, return JSON error
             return new Response(
-              JSON.stringify({ error: "You are offline and this request is not cached." }),
+              JSON.stringify({ error: "You are currently offline. Local cache used where available." }),
               { headers: { "Content-Type": "application/json" } }
             );
           });
         })
     );
   } else {
-    // For static assets, we do Stale-While-Revalidate
+    // Stale-While-Revalidate for static assets & pages
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          // Fetch new version in background to update cache
-          fetch(event.request)
-            .then((networkResponse) => {
-              if (networkResponse.status === 200) {
-                caches.open(CACHE_NAME).then((cache) => {
-                  cache.put(event.request, networkResponse);
-                });
-              }
-            })
-            .catch(() => {
-              // Ignore network errors in background
-            });
-          return cachedResponse;
-        }
+        const fetchPromise = fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
 
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        });
+        return cachedResponse || fetchPromise;
       })
     );
   }

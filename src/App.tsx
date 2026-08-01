@@ -21,9 +21,11 @@ import {
   removeOfflineArticle,
   DEFAULT_FEEDS,
   registerServiceWorker,
+  fetchSingleFeedArticles,
 } from "./utils";
 import { Menu, ChevronLeft, Rss } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import ivesLogo from "./assets/logo.png";
 
 export default function App() {
   // Persistence States
@@ -43,6 +45,29 @@ export default function App() {
   const [managerOpen, setManagerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar drawer toggler
   const [viewMode, setViewMode] = useState<"list" | "reader">("list"); // Mobile view selector
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("ives_dark_mode");
+      if (saved !== null) return JSON.parse(saved);
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } catch {
+      return false;
+    }
+  });
+
+  // Dark mode class synchronization
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    try {
+      localStorage.setItem("ives_dark_mode", JSON.stringify(isDarkMode));
+    } catch {}
+  }, [isDarkMode]);
+
+  const handleToggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
   // Initial load
   useEffect(() => {
@@ -97,23 +122,7 @@ export default function App() {
           return;
         }
 
-        const allPromises = activeList.map(async (feed) => {
-          try {
-            const response = await fetch("/api/feeds", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url: feed.url }),
-            });
-            if (!response.ok) return [];
-            const data = await response.json();
-            return (data.articles || []).map((art: any) => ({
-              ...art,
-              feedId: feed.id,
-            }));
-          } catch {
-            return [];
-          }
-        });
+        const allPromises = activeList.map((feed) => fetchSingleFeedArticles(feed.url, feed.id));
 
         const results = await Promise.all(allPromises);
         const aggregated = results.flat();
@@ -136,21 +145,7 @@ export default function App() {
           return;
         }
 
-        const response = await fetch("/api/feeds", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: targetFeed.url }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch feed channels.");
-        }
-
-        const data = await response.json();
-        const feedArticles = (data.articles || []).map((art: any) => ({
-          ...art,
-          feedId: targetFeed.id,
-        }));
+        const feedArticles = await fetchSingleFeedArticles(targetFeed.url, targetFeed.id);
 
         // Deduplicate articles
         const seenIds = new Set<string>();
@@ -237,9 +232,13 @@ export default function App() {
           </motion.button>
           <div className="flex items-center gap-2">
             <img
-              src="/Ives.png"
+              src={ivesLogo}
               alt="IVES News Logo"
               className="w-7 h-7 rounded-lg object-cover shadow-xs border border-black/10 dark:border-white/10"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "./Ives.png";
+              }}
             />
             <span className="font-sans font-bold text-base tracking-tight text-stone-900 dark:text-white">IVES News</span>
           </div>
@@ -293,6 +292,8 @@ export default function App() {
           isOffline={isOffline}
           offlineCount={Object.keys(offlineArticles).length}
           bookmarkCount={bookmarks.length}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
         />
       </div>
 
